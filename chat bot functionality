@@ -1,0 +1,40 @@
+import pandas as pd
+import numpy as np
+data=pd.read_csv('C:/scraped.csv',encoding='cp1252')
+#shift value of answers up 
+data['questions']=data['questions']
+data['answers']=data['answers'].shift(periods=-1)
+data.dropna(axis=0,how='any',inplace=True)
+me=list(data['questions'])
+you=list(data['answers'])
+for i in range(len(me)):
+    y=[me[i],you[i]]
+from chatterbot.chatterbot import ChatBot
+bot = ChatBot(
+    'Buddy',
+    storage_adapter='chatterbot.storage.SQLStorageAdapter',
+    database_uri='sqlite:///database.sqlite3'
+)
+# Create object of ChatBot class with Logic Adapter
+bot = ChatBot(
+    'Buddy',  
+    logic_adapters=[
+        'chatterbot.logic.BestMatch',
+        'chatterbot.logic.TimeLogicAdapter'],
+)
+
+from chatterbot.trainers import ListTrainer
+
+trainer = ListTrainer(bot)
+trainer.train((y))
+name=input("Enter Your Name: ")
+print("Welcome to the Bot Service! Let me know how can I help you?")
+while True:
+    request=input(name+':')
+    if request=='Bye' or request =='bye':
+        print('Bot: Bye')
+        break
+    else:
+        response=bot.get_response(request)
+        print('Bot:',response)
+        
