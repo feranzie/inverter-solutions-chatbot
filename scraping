@@ -1,0 +1,80 @@
+# -*- coding: utf-8 -*-
+"""
+Spyder Editor
+
+This is a temporary script file.
+"""
+from selenium import webdriver
+from bs4 import BeautifulSoup
+import time
+import pandas as pd
+ #import Action chains  
+from selenium.webdriver.common.action_chains import ActionChains  
+   
+
+driver = webdriver.Chrome("C:\chromedriver")
+# create action chain object 
+action = ActionChains(driver) 
+ 
+driver.get("https://www.quora.com/topic/Solar-Inverters")
+questions=[] #List to store name of the product
+answers=[] #List to store price of the product
+
+SCROLL_PAUSE_TIME = 0.5
+def scroll():
+# Get scroll height
+    last_height = driver.execute_script("return document.body.scrollHeight")
+
+    while True:
+        # Scroll down to bottom
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        # Wait to load page
+        time.sleep(6)
+    
+        # Calculate new scroll height and compare with last scroll height
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break
+        last_height = new_height
+        elements= driver.find_elements_by_class_name('q-absolute')
+        #find_element_by_class_name
+        for i,e in enumerate(elements):
+            try:
+                if e.text=='(more)':
+                    e.click()
+                else:
+                    continue
+            except:
+                continue
+            store()
+    time.sleep(30)
+    driver.quit()
+        
+def store():  
+    content = driver.page_source
+    soup = BeautifulSoup(content,'html.parser')
+    soup.find_all('div', class_='CssComponent-sc-1oskqb9-0 cXjXFI')
+    import csv
+
+    with open('C:\Apps\scrapef.csv', 'w', newline='',encoding='utf-8') as csvfile:
+        fieldnames = ['questions', 'answers']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for i in soup.find_all('div',{'class':'CssComponent-sc-1oskqb9-0 cXjXFI'}):
+            link = i.find('a',href=True)
+            questions=(i.find('div', attrs={'class':'q-flex qu-mb--tiny'}))
+            answers=(i.find('div', attrs={'class':'q-relative spacing_log_answer_content puppeteer_test_answer_content'}))
+            questions=questions.get_text()
+            answers=answers.get_text()
+            questions=questions.encode('utf8')
+            answers=answers.encode('utf8')
+        
+            writer.writerow({'questions':questions.decode('utf8')})
+            writer.writerow({'answers':answers.decode('utf8')})
+         
+scroll()
+
+       
+        
+
